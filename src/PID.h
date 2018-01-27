@@ -41,7 +41,7 @@ class PID
     /*
     * Calculate the total PID error.
     */
-    double TotalError(double speed, bool steer);
+    double TotalError();
 };
 
 #endif /* PID_H */

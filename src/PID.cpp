@@ -26,21 +26,5 @@ void PID::UpdateError(double cte)
 
 void PID::TotalError()
 {
-  if (speed == 0)
-  {
-    speed = 0.001;
-  }
-
-  double p_speed = 0.000;
-  double i_speed = 0.00000;
-  double d_speed = 0.00;
-  if (steer)
-  {
-    return -((Kp - p_speed * speed) * p_error) - ((Ki - i_speed * speed) * i_error)
-           - ((Kd + d_speed * speed)* d_error);
-  }
-  else
-  {
-    return -((Kp + p_speed * speed) * p_error) - (Ki * i_error) - ((Kd - d_speed * speed) * d_error);
-  }
+  return -Kp * p_error - Kd * d_error - Ki * i_error;
 }
