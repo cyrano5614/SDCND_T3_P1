@@ -10,6 +10,7 @@
 #include "json.hpp"
 #include "spline.h"
 #include "Vehicle.h"
+#include "PID.h"
 
 using namespace std;
 
@@ -207,8 +208,14 @@ int main() {
   /* double ref_speed = 0.0; */
   // double speed_limit = 50;
   Vehicle agent;
+  
+  double target_speed = 49.0;
+  double ref_speed = 0.0;
 
-  h.onMessage([&agent,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  PID speed_pid;
+  speed_pid.Init(0.015, 0.0, 0.0);
+
+  h.onMessage([&target_speed,&ref_speed,&agent,&speed_pid,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -303,7 +310,7 @@ int main() {
             /*     } */
             /*   } */
             /* } */
-            double ref_speed = 49;
+            /* double ref_speed; */
 
             /* if (agent.too_close) */
             /* { */
@@ -318,22 +325,35 @@ int main() {
             /* } */
             if (agent.too_close)
             {
-              ref_speed -= 0.224;
-              /* ref_speed = agent.vehicle_infront_speed; */
+              /* ref_speed -= 0.224; */
+              target_speed = agent.vehicle_infront_speed;
+              cout << "Theres something in front!" << endl;
+              cout << "Front Vehicle speed: " << agent.vehicle_infront_speed << endl;
+              cout << "Distance to vehicle: " << agent.dist << endl;
             }
-            else if (ref_speed < 49.0)
-            /* else */
+            /* else if (ref_speed < 49.0) */
+            else
             {
-              ref_speed += 0.224;
-              /* ref_speed += agent.speed_limit; */
+              /* ref_speed += 0.224; */
+              target_speed = agent.speed_limit;
             }
 
-            cout << "car_x: " << car_x << endl;
-            cout << "car_y: " << car_y << endl;
-            cout << "car_s: " << car_s << endl;
-            cout << "car_d: " << car_d << endl;
-            cout << "In Lane: " << agent.lane << endl;
-            cout << "Speed: " << car_speed << endl;
+            cout << "target speed: " << target_speed << endl;
+            cout << "before ref speed: " << ref_speed << endl;
+
+            double speed_error = target_speed - ref_speed;
+            speed_pid.UpdateError(speed_error);
+            double speed_correction = speed_pid.TotalError();
+            ref_speed -= speed_correction;
+
+            cout << "after ref speed: " << ref_speed << endl;
+
+            /* cout << "car_x: " << car_x << endl; */
+            /* cout << "car_y: " << car_y << endl; */
+            /* cout << "car_s: " << car_s << endl; */
+            /* cout << "car_d: " << car_d << endl; */
+            /* cout << "In Lane: " << agent.lane << endl; */
+            cout << "My Speed: " << car_speed << endl;
 
             vector<double> ptsx;
             vector<double> ptsy;
@@ -344,7 +364,7 @@ int main() {
 
             if (prev_size < 2)
             {
-              cout << "Not enough previous points!" << endl;
+              /* cout << "Not enough previous points!" << endl; */
               double prev_car_x = car_x - cos(car_yaw);
               double prev_car_y = car_y - sin(car_yaw);
 
@@ -356,7 +376,7 @@ int main() {
             }
             else
             {
-              cout << "Enough previous points!" << endl;
+              /* cout << "Enough previous points!" << endl; */
               ref_x = previous_path_x[prev_size - 1];
               ref_y = previous_path_y[prev_size - 1];
 
@@ -397,10 +417,10 @@ int main() {
             tk::spline s;
 
             for (int i = 0; i < ptsx.size(); ++i) {
-              cout << "ptsx: " << ptsx[i] << endl;
+              /* cout << "ptsx: " << ptsx[i] << endl; */
             }
             for (int i = 0; i < ptsy.size(); ++i) {
-              cout << "ptsy: " << ptsy[i] << endl;
+              /* cout << "ptsy: " << ptsy[i] << endl; */
             }
 
             s.set_points(ptsx, ptsy);
