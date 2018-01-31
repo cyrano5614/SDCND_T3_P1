@@ -5,17 +5,21 @@
 
 using namespace std;
 
-/* Vehicle::Vehicle() {} */
+// Vehicle::Vehicle() {}
 
-/* Vehicle::~Vehicle() {} */
+// Vehicle::~Vehicle() {}
 
 void Vehicle::lane_logic(vector<vector<double> > sensor_fusion, double car_s, int prev_size){
 
+  // if (!too_close) {
+  //   vehicle_infront_speed = speed_limit;
+  // }
   too_close = false;
   left_close = false;
   right_close = false;
-  dist = 999999;
-  int front_safe_distance = 30;
+  /* dist = 999999; */
+  int front_safe_distance = 40;
+  // int switch_safe_distance = 30;
   int rear_safe_distance = 10;
   
   //Check if vehicle is too close infront of the agent
@@ -38,8 +42,15 @@ void Vehicle::lane_logic(vector<vector<double> > sensor_fusion, double car_s, in
       //Safe distance set to 30m
       if ((dist > 0) && (dist < front_safe_distance))
       {
-        too_close = true;
-        vehicle_infront_speed = check_speed;
+        if (dist < front_safe_distance) {
+          too_close = true;
+          vehicle_infront_speed = check_speed;
+        }
+        // else if (dist < switch_safe_distance) {
+        //   vehicle_infront_speed = check_speed;
+        // }
+        /* too_close = true; */
+        /* vehicle_infront_speed = check_speed; */
       }
       // else {
       //   dist = 999999;
@@ -50,11 +61,11 @@ void Vehicle::lane_logic(vector<vector<double> > sensor_fusion, double car_s, in
     //Check the status of the lane left of the agent
     else if ((lane != 0) && (d < (2 + 4 * (lane - 1) + 2) && d > (2 + 4 * (lane - 1) - 2)))
     {
-      if ((check_car_s > car_s) && ((check_car_s - car_s) < front_safe_distance))
+      if ((check_car_s > car_s) && ((dist) < front_safe_distance))
       {
         left_close = true;
       }
-      else if ((check_car_s < car_s) && ((car_s - check_car_s) < rear_safe_distance))
+      else if ((check_car_s < car_s) && ((-dist) < rear_safe_distance))
       {
         left_close = true;
       }
@@ -63,16 +74,17 @@ void Vehicle::lane_logic(vector<vector<double> > sensor_fusion, double car_s, in
     //Check the status of the lane left of the agent
     else if ((lane != 2) && (d < (2 + 4 * (lane + 1) + 2) && d > (2 + 4 * (lane + 1) - 2)))
     {
-      if ((check_car_s > car_s) && ((check_car_s - car_s) < front_safe_distance))
+      if ((check_car_s > car_s) && ((dist) < front_safe_distance))
       {
         right_close = true;
       }
-      else if ((check_car_s < car_s) && ((car_s - check_car_s) < rear_safe_distance))
+      else if ((check_car_s < car_s) && ((-dist) < rear_safe_distance))
       {
         right_close = true;
       }
     }
     
+    //Lane logic
     if (lane == 0 && too_close && !right_close) {
       lane = 1;
     }

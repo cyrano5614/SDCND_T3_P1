@@ -209,11 +209,11 @@ int main() {
   // double speed_limit = 50;
   Vehicle agent;
   
-  double target_speed = 49.0;
+  double target_speed = 49.5;
   double ref_speed = 0.0;
 
   PID speed_pid;
-  speed_pid.Init(0.015, 0.0, 0.0);
+  speed_pid.Init(0.025, 0.00000, 0.003);
 
   h.onMessage([&target_speed,&ref_speed,&agent,&speed_pid,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
@@ -258,71 +258,18 @@ int main() {
           	/* vector<double> next_y_vals; */
 
 
-          	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 
             int prev_size = previous_path_x.size();
+
+            //If there are previous path points, end of the path point is current car position
+            if(prev_size > 0){
+                car_s = end_path_s;
+            }
+
+            //update lane logic 
             agent.lane_logic(sensor_fusion, car_s, prev_size);
-            /* cout << "prev_size: " << prev_size << endl; */
-            /* cout << "car_s: " << car_s << endl; */
-            /* cout << "end_path_s: " << end_path_s << endl; */
 
-            /* if (car_d < 4.0 && car_d > 0.0) */
-            /* { */
-            /*   lane = 0; */
-            /* } */
-            /* else if (car_d >= 4.0 && car_d < 8.0) */
-            /* { */
-            /*   lane = 1; */
-            /* } */
-            /* else if (car_d >= 8.0 && car_d < 12.0) */
-            /* { */
-            /*   lane = 2; */
-            /* } */
-
-            /* double future_s; */
-
-            /* if (prev_size > 0) */
-            /* { */
-            /*   future_s = end_path_s; */
-            /* } */
-
-            /* bool too_close = false; */
-
-            /* //find ref_v to use */
-            /* for (int i = 0; i < sensor_fusion.size(); i++) */
-            /* { */
-            /*   //car is in my lane */
-            /*   float d = sensor_fusion[i][6]; */
-
-            /*   if (d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2)) */
-            /*   { */
-            /*     double vx = sensor_fusion[i][3]; */
-            /*     double vy = sensor_fusion[i][4]; */
-            /*     double check_speed = sqrt(vx * vx + vy * vy); */
-            /*     double check_car_s = sensor_fusion[i][5]; */
-
-            /*     check_car_s += ((double)prev_size * 0.02 * check_speed); */
-
-            /*     if ((check_car_s > future_s) && ((check_car_s - future_s) < 30)) */
-            /*     { */
-            /*       // ref_speed = 29.5; */
-            /*       too_close = true; */
-            /*     } */
-            /*   } */
-            /* } */
-            /* double ref_speed; */
-
-            /* if (agent.too_close) */
-            /* { */
-            /*   /1* ref_speed -= 0.224; *1/ */
-            /*   ref_speed = agent.vehicle_infront_speed; */
-            /* } */
-            /* /1* else if (ref_speed < 49.0) *1/ */
-            /* else */
-            /* { */
-            /*   /1* ref_speed += 0.224; *1/ */
-            /*   ref_speed += agent.speed_limit; */
-            /* } */
+            // Check if obstacle is infront and adjust speed
             if (agent.too_close)
             {
               /* ref_speed -= 0.224; */
@@ -340,7 +287,11 @@ int main() {
 
             cout << "target speed: " << target_speed << endl;
             cout << "before ref speed: " << ref_speed << endl;
+            cout << "lane number " << agent.lane << endl;
+            cout << "right side " << agent.right_close << endl;
+            cout << "left side " << agent.left_close << endl;
 
+            //Calculate velocity error and feed to PID controller
             double speed_error = target_speed - ref_speed;
             speed_pid.UpdateError(speed_error);
             double speed_correction = speed_pid.TotalError();
@@ -355,6 +306,7 @@ int main() {
             /* cout << "In Lane: " << agent.lane << endl; */
             cout << "My Speed: " << car_speed << endl;
 
+            //path points storage vectors
             vector<double> ptsx;
             vector<double> ptsy;
 
@@ -393,9 +345,9 @@ int main() {
             }
 
 
-            vector<double> next_wp0 = getXY(car_s + 30, (2+4*agent.lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            vector<double> next_wp1 = getXY(car_s + 60, (2+4*agent.lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            vector<double> next_wp2 = getXY(car_s + 90, (2+4*agent.lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> next_wp0 = getXY(car_s + 40, (2+4*agent.lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> next_wp1 = getXY(car_s + 80, (2+4*agent.lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> next_wp2 = getXY(car_s + 120, (2+4*agent.lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
 
             ptsx.push_back(next_wp0[0]);
             ptsx.push_back(next_wp1[0]);
@@ -416,12 +368,12 @@ int main() {
 
             tk::spline s;
 
-            for (int i = 0; i < ptsx.size(); ++i) {
-              /* cout << "ptsx: " << ptsx[i] << endl; */
-            }
-            for (int i = 0; i < ptsy.size(); ++i) {
-              /* cout << "ptsy: " << ptsy[i] << endl; */
-            }
+            /* for (int i = 0; i < ptsx.size(); ++i) { */
+            /*   /1* cout << "ptsx: " << ptsx[i] << endl; *1/ */
+            /* } */
+            /* for (int i = 0; i < ptsy.size(); ++i) { */
+            /*   /1* cout << "ptsy: " << ptsy[i] << endl; *1/ */
+            /* } */
 
             s.set_points(ptsx, ptsy);
 

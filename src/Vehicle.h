@@ -17,7 +17,7 @@ class Vehicle
     bool left_close = false;
     bool right_close = false;
     double vehicle_infront_speed = 49;
-    double dist;
+    double dist = 99999;
 
     Vehicle(){};
 
