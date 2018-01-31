@@ -12,7 +12,11 @@ using namespace std;
 void Vehicle::lane_logic(vector<vector<double> > sensor_fusion, double car_s, int prev_size){
 
   too_close = false;
+  left_close = false;
+  right_close = false;
   dist = 999999;
+  int front_safe_distance = 30;
+  int rear_safe_distance = 10;
   
   //Check if vehicle is too close infront of the agent
   for (unsigned int i = 0; i < sensor_fusion.size(); i++)
@@ -32,7 +36,7 @@ void Vehicle::lane_logic(vector<vector<double> > sensor_fusion, double car_s, in
     if (d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2))
     {
       //Safe distance set to 30m
-      if ((dist > 0) && (dist < 50))
+      if ((dist > 0) && (dist < front_safe_distance))
       {
         too_close = true;
         vehicle_infront_speed = check_speed;
@@ -46,34 +50,48 @@ void Vehicle::lane_logic(vector<vector<double> > sensor_fusion, double car_s, in
     //Check the status of the lane left of the agent
     else if ((lane != 0) && (d < (2 + 4 * (lane - 1) + 2) && d > (2 + 4 * (lane - 1) - 2)))
     {
-      if ((check_car_s > car_s) && ((check_car_s - car_s) < 30))
+      if ((check_car_s > car_s) && ((check_car_s - car_s) < front_safe_distance))
       {
         left_close = true;
       }
-      else if ((check_car_s < car_s) && ((car_s - check_car_s) < 20))
+      else if ((check_car_s < car_s) && ((car_s - check_car_s) < rear_safe_distance))
       {
         left_close = true;
-      }
-      else {
-        left_close = false;
       }
     }
 
     //Check the status of the lane left of the agent
     else if ((lane != 2) && (d < (2 + 4 * (lane + 1) + 2) && d > (2 + 4 * (lane + 1) - 2)))
     {
-      if ((check_car_s > car_s) && ((check_car_s - car_s) < 30))
+      if ((check_car_s > car_s) && ((check_car_s - car_s) < front_safe_distance))
       {
         right_close = true;
       }
-      else if ((check_car_s < car_s) && ((car_s - check_car_s) < 20))
+      else if ((check_car_s < car_s) && ((car_s - check_car_s) < rear_safe_distance))
       {
         right_close = true;
-      }
-      else {
-        right_close = false;
       }
     }
+    
+    if (lane == 0 && too_close && !right_close) {
+      lane = 1;
+    }
+    else if (lane == 2 && too_close && !left_close) {
+      lane = 1;
+    }
+    else if (lane == 1 && too_close && !left_close) {
+      lane = 0;
+    }
+    else if (lane == 1 && too_close && !right_close) {
+      lane = 2;
+    }
+
+
+      
+
+
+
+
   }
 
 }
