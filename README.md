@@ -149,6 +149,14 @@ From above code, we generated 3 points, each 40 meters apart to sparse map out o
 
 As seen from the code above, we filled the trajectory with 50 evenly spaced waypoints.
 
+### Project Video ###
+
+-------------------------------------------------------------------------------
+
+[Project Video](https://youtu.be/xCmKjs5eSK8)
+
+-------------------------------------------------------------------------------
+
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
 
